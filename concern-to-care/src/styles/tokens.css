@@ -1,0 +1,55 @@
+:root {
+  --bg: #f7f4ee;
+  --surface: #ffffff;
+  --surface-soft: #efeae1;
+  --ink: #1a1a1a;
+  --ink-soft: #5a5a5a;
+  --ink-muted: #8a8a8a;
+  --line: #e5e0d6;
+  --sage: #7a9e94;
+  --sage-soft: #dde8e2;
+  --sage-deep: #4f7065;
+  --amber: #c8896a;
+  --amber-soft: #f0dcc9;
+  --alert: #b85c5c;
+  --alert-soft: #f4dddd;
+  --shadow-soft: 0 14px 40px rgb(26 26 26 / 8%);
+  --default-spring: 280, 26, 0.9;
+  --snappy-spring: 400, 30, 0.5;
+  --settling-spring: 220, 24, 1.1;
+}
+
+html {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  min-width: 320px;
+  min-height: 100svh;
+  margin: 0;
+  background: linear-gradient(135deg, var(--bg), #f4efe6 54%, #edf2ef);
+}
+
+button,
+textarea,
+input {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
+}
+
+* {
+  box-sizing: border-box;
+}
