@@ -37,4 +37,57 @@ export const scenario = {
       'Vision loss or symptoms that are rapidly worsening',
     ],
   },
+  handoff: {
+    date: '26 Apr 2026',
+    sections: [
+      {
+        title: 'Reason for appointment',
+        body: 'Headaches that have become more frequent over the last two weeks, with vision feeling off at times.',
+      },
+      {
+        title: 'Symptom summary',
+        body: 'Intermittent headaches, increasing frequency, sometimes alongside visual changes. Clarifying answer recorded in the app.',
+      },
+      {
+        title: 'What the patient is concerned about',
+        body: 'Unsure whether this should be handled by a GP, optician, or more urgent care.',
+      },
+      {
+        title: 'What we recommended',
+        body: 'Same-day or next-day GP appointment, with faster action if symptoms suddenly worsen.',
+      },
+      {
+        title: 'What we did not assess',
+        body: 'No diagnosis was made. Medication, medical history, blood pressure, and neurological examination were not assessed.',
+      },
+    ],
+  },
+  booking: {
+    slots: [
+      {
+        id: 'today-1620',
+        day: 'Today',
+        time: '4:20pm',
+        clinician: 'Dr. Sarah Chen',
+        clinic: 'Parkside Medical Centre',
+        distance: '0.8 miles away',
+      },
+      {
+        id: 'tomorrow-0930',
+        day: 'Tomorrow',
+        time: '9:30am',
+        clinician: 'Dr. Amit Patel',
+        clinic: 'Riverside GP Practice',
+        distance: '1.1 miles away',
+      },
+      {
+        id: 'tomorrow-1140',
+        day: 'Tomorrow',
+        time: '11:40am',
+        clinician: 'Dr. Leah Morgan',
+        clinic: 'Parkside Medical Centre',
+        distance: '0.8 miles away',
+      },
+    ],
+  },
 } as const

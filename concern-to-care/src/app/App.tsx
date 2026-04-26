@@ -4,8 +4,11 @@ import { PhoneFrame } from '../components/PhoneFrame'
 import { Screen } from '../components/Screen'
 import { scenarioScreens, useScenarioState } from '../hooks/useScenarioState'
 import { scenario } from '../data/scenario'
+import { BookingScreen } from '../screens/BookingScreen'
 import { ClarifyingScreen } from '../screens/ClarifyingScreen'
+import { ConfirmationScreen } from '../screens/ConfirmationScreen'
 import { ConcernScreen } from '../screens/ConcernScreen'
+import { HandoffScreen } from '../screens/HandoffScreen'
 import { RecommendationScreen } from '../screens/RecommendationScreen'
 import { StructureScreen } from '../screens/StructureScreen'
 import { StructuringScreen } from '../screens/StructuringScreen'
@@ -134,69 +137,36 @@ function ScreenHost({ state }: { state: ScenarioState }) {
     )
   }
 
-  const labels = {
-    handoff: {
-      eyebrow: 'Handoff',
-      title: 'Clinician brief preview',
-      body: 'A later PR will add the editable handoff detail screen.',
-      cta: 'Choose slot',
-    },
-    booking: {
-      eyebrow: 'Booking',
-      title: 'Appointment slots',
-      body: 'A later PR will add slot selection and confirmation behavior.',
-      cta: 'Confirm',
-    },
-    confirmation: {
-      eyebrow: 'Complete',
-      title: 'Appointment booked',
-      body: 'The end state is stubbed here so PR1 can step through the whole planned flow.',
-      cta: 'Restart',
-    },
-  } as const
+  if (state.screen === 'handoff') {
+    return (
+      <HandoffScreen
+        selectedAnswer={state.selectedClarifyingAnswer}
+        onContinue={() => state.goTo('booking')}
+      />
+    )
+  }
 
-  const copy = labels[state.screen as keyof typeof labels]
+  if (state.screen === 'booking') {
+    return (
+      <BookingScreen
+        onSelectSlot={(slotId) => {
+          state.setSelectedBookingSlotId(slotId)
+          state.goTo('confirmation')
+        }}
+      />
+    )
+  }
 
-  return (
-    <StubScreen
-      eyebrow={copy.eyebrow}
-      title={copy.title}
-      body={copy.body}
-      cta={copy.cta}
-      onNext={state.screen === 'confirmation' ? state.reset : state.goNext}
-    />
-  )
-}
+  if (state.screen === 'confirmation') {
+    return (
+      <ConfirmationScreen
+        selectedSlotId={state.selectedBookingSlotId}
+        onRestart={state.reset}
+      />
+    )
+  }
 
-function StubScreen({
-  eyebrow,
-  title,
-  body,
-  cta,
-  onNext,
-}: {
-  eyebrow: string
-  title: string
-  body: string
-  cta: string
-  onNext: () => void
-}) {
-  return (
-    <section className="flex flex-1 flex-col justify-between gap-8">
-      <div className="pt-12">
-        <p className="mb-3 text-xs font-semibold uppercase text-sage-deep">
-          {eyebrow}
-        </p>
-        <h1 className="text-[28px] font-bold leading-[1.2]">{title}</h1>
-        <Card variant="elevated" className="mt-8 text-[16px] leading-6 text-ink-soft">
-          {body}
-        </Card>
-      </div>
-      <Button type="button" onClick={onNext} className="w-full">
-        {cta}
-      </Button>
-    </section>
-  )
+  return null
 }
 
 function ClarifyingQuestion({

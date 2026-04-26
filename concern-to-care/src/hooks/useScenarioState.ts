@@ -15,6 +15,7 @@ export const scenarioScreens = [
 
 export type ScenarioScreen = (typeof scenarioScreens)[number]
 export type ClarifyingAnswer = (typeof scenario.clarifyingAnswers)[number] | null
+export type BookingSlotId = (typeof scenario.booking.slots)[number]['id'] | null
 
 const flowScreens = scenarioScreens.filter(
   (screen) => screen !== 'preview',
@@ -26,6 +27,8 @@ export function useScenarioState() {
   const [concernText, setConcernText] = useState<string>('')
   const [selectedClarifyingAnswer, setSelectedClarifyingAnswer] =
     useState<ClarifyingAnswer>(null)
+  const [selectedBookingSlotId, setSelectedBookingSlotId] =
+    useState<BookingSlotId>(null)
 
   const currentIndex = useMemo(() => flowScreens.indexOf(screen as never), [screen])
 
@@ -59,12 +62,14 @@ export function useScenarioState() {
     setHistory([])
     setConcernText('')
     setSelectedClarifyingAnswer(null)
+    setSelectedBookingSlotId(null)
   }
 
   return {
     screen,
     concernText,
     selectedClarifyingAnswer,
+    selectedBookingSlotId,
     canGoBack: history.length > 0,
     goTo,
     goBack,
@@ -72,5 +77,6 @@ export function useScenarioState() {
     reset,
     setConcernText,
     setSelectedClarifyingAnswer,
+    setSelectedBookingSlotId,
   }
 }
