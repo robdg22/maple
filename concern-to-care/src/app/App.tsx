@@ -6,6 +6,7 @@ import { scenarioScreens, useScenarioState } from '../hooks/useScenarioState'
 import { scenario } from '../data/scenario'
 import { ClarifyingScreen } from '../screens/ClarifyingScreen'
 import { ConcernScreen } from '../screens/ConcernScreen'
+import { RecommendationScreen } from '../screens/RecommendationScreen'
 import { StructureScreen } from '../screens/StructureScreen'
 import { StructuringScreen } from '../screens/StructuringScreen'
 
@@ -125,12 +126,10 @@ function ScreenHost({ state }: { state: ScenarioState }) {
 
   if (state.screen === 'recommend') {
     return (
-      <StubScreen
-        eyebrow="Recommendation"
-        title={scenario.recommendation.heading}
-        body={scenario.recommendation.reason}
-        cta="Inspect handoff"
-        onNext={() => state.goTo('handoff')}
+      <RecommendationScreen
+        selectedAnswer={state.selectedClarifyingAnswer}
+        onBook={() => state.goTo('booking')}
+        onInspectHandoff={() => state.goTo('handoff')}
       />
     )
   }
