@@ -4,7 +4,9 @@ import { PhoneFrame } from '../components/PhoneFrame'
 import { Screen } from '../components/Screen'
 import { scenarioScreens, useScenarioState } from '../hooks/useScenarioState'
 import { scenario } from '../data/scenario'
+import { ClarifyingScreen } from '../screens/ClarifyingScreen'
 import { ConcernScreen } from '../screens/ConcernScreen'
+import { StructureScreen } from '../screens/StructureScreen'
 import { StructuringScreen } from '../screens/StructuringScreen'
 
 export function App() {
@@ -104,37 +106,20 @@ function ScreenHost({ state }: { state: ScenarioState }) {
 
   if (state.screen === 'structure') {
     return (
-      <section className="flex flex-1 flex-col gap-5">
-        <Card variant="soft" className="text-sm leading-5 text-ink-soft">
-          "{state.concernText}"
-        </Card>
-        <h1 className="text-[28px] font-bold leading-[1.2]">Here's what we understood</h1>
-        <Card variant="elevated" className="space-y-4">
-          {scenario.structuredSummary.map((row) => (
-            <div key={row.label} className="flex items-center justify-between gap-4">
-              <div>
-                <p className="text-xs font-semibold uppercase text-sage-deep">
-                  {row.label}
-                </p>
-                <p className="mt-1 text-[16px] font-semibold leading-6">{row.value}</p>
-              </div>
-              <span className="text-ink-muted" aria-hidden="true">
-                Edit
-              </span>
-            </div>
-          ))}
-        </Card>
-        <Card variant="soft" className="text-sm leading-5 text-sage-deep">
-          This is what we understood from what you shared. Tap any row to correct it.
-        </Card>
-        <ClarifyingQuestion
-          selectedAnswer={state.selectedClarifyingAnswer}
-          onSelectAnswer={(answer) => {
-            state.setSelectedClarifyingAnswer(answer)
-            state.goTo('recommend')
-          }}
-        />
-      </section>
+      <StructureScreen
+        concernText={state.concernText}
+        onComplete={() => state.goTo('clarify')}
+      />
+    )
+  }
+
+  if (state.screen === 'clarify') {
+    return (
+      <ClarifyingScreen
+        selectedAnswer={state.selectedClarifyingAnswer}
+        onSelectAnswer={state.setSelectedClarifyingAnswer}
+        onComplete={() => state.goTo('recommend')}
+      />
     )
   }
 

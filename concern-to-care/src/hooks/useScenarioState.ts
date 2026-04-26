@@ -5,6 +5,7 @@ export const scenarioScreens = [
   'concern',
   'structuring',
   'structure',
+  'clarify',
   'recommend',
   'handoff',
   'booking',
