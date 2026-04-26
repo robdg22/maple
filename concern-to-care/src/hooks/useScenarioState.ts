@@ -22,7 +22,7 @@ const flowScreens = scenarioScreens.filter(
 export function useScenarioState() {
   const [screen, setScreen] = useState<ScenarioScreen>('concern')
   const [history, setHistory] = useState<ScenarioScreen[]>([])
-  const [concernText, setConcernText] = useState<string>(scenario.concern)
+  const [concernText, setConcernText] = useState<string>('')
   const [selectedClarifyingAnswer, setSelectedClarifyingAnswer] =
     useState<ClarifyingAnswer>(null)
 
@@ -34,15 +34,14 @@ export function useScenarioState() {
   }
 
   function goBack() {
-    setHistory((currentHistory) => {
-      const previousScreen = currentHistory.at(-1)
-      if (previousScreen) {
-        setScreen(previousScreen)
-        return currentHistory.slice(0, -1)
-      }
+    const previousScreen = history.at(-1)
 
-      return currentHistory
-    })
+    if (!previousScreen) {
+      return
+    }
+
+    setHistory((currentHistory) => currentHistory.slice(0, -1))
+    setScreen(previousScreen)
   }
 
   function goNext() {
@@ -57,7 +56,7 @@ export function useScenarioState() {
   function reset() {
     setScreen('concern')
     setHistory([])
-    setConcernText(scenario.concern)
+    setConcernText('')
     setSelectedClarifyingAnswer(null)
   }
 

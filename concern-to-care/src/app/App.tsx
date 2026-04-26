@@ -1,10 +1,11 @@
-import { motion } from 'framer-motion'
 import { Button } from '../components/Button'
 import { Card } from '../components/Card'
 import { PhoneFrame } from '../components/PhoneFrame'
 import { Screen } from '../components/Screen'
 import { scenarioScreens, useScenarioState } from '../hooks/useScenarioState'
 import { scenario } from '../data/scenario'
+import { ConcernScreen } from '../screens/ConcernScreen'
+import { StructuringScreen } from '../screens/StructuringScreen'
 
 export function App() {
   const state = useScenarioState()
@@ -18,7 +19,7 @@ export function App() {
             onBack={state.goBack}
             onPreview={() => state.goTo('preview')}
           />
-          <div className="flex min-h-0 flex-1 flex-col">
+          <div className="scrollbar-none -mx-5 flex min-h-0 flex-1 flex-col overflow-y-auto px-5 pb-12">
             {state.screen === 'preview' ? (
               <ComponentPreview
                 selectedAnswer={state.selectedClarifyingAnswer}
@@ -84,59 +85,19 @@ function Header({
 function ScreenHost({ state }: { state: ScenarioState }) {
   if (state.screen === 'concern') {
     return (
-      <section className="flex flex-1 flex-col justify-between gap-6">
-        <div className="pt-12">
-          <motion.p
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ type: 'spring', stiffness: 280, damping: 26, mass: 0.9 }}
-            className="mb-4 text-sm font-medium text-ink-soft"
-          >
-            Start in your own words.
-          </motion.p>
-          <motion.h1
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{
-              type: 'spring',
-              stiffness: 280,
-              damping: 26,
-              mass: 0.9,
-              delay: 0.06,
-            }}
-            className="text-[28px] font-bold leading-[1.2]"
-          >
-            What's been happening?
-          </motion.h1>
-          <textarea
-            value={state.concernText}
-            onChange={(event) => state.setConcernText(event.target.value)}
-            className="mt-8 min-h-56 w-full resize-none border-0 border-b border-line bg-transparent pb-4 text-[16px] leading-6 text-ink outline-none transition-colors focus:border-sage"
-          />
-          <p className="mt-4 text-sm leading-5 text-ink-soft">
-            Use your own words. You can always change anything later.
-          </p>
-        </div>
-        <Button
-          type="button"
-          disabled={!state.concernText.trim()}
-          className="w-full"
-          onClick={() => state.goTo('structuring')}
-        >
-          Continue
-        </Button>
-      </section>
+      <ConcernScreen
+        concernText={state.concernText}
+        onConcernChange={state.setConcernText}
+        onContinue={() => state.goTo('structuring')}
+      />
     )
   }
 
   if (state.screen === 'structuring') {
     return (
-      <StubScreen
-        eyebrow="Understanding"
-        title="Understanding what you've shared..."
-        body="The concern is compressed into context at the top while the system prepares the structured view."
-        cta="Show structure"
-        onNext={() => state.goTo('structure')}
+      <StructuringScreen
+        concernText={state.concernText}
+        onComplete={() => state.goTo('structure')}
       />
     )
   }
@@ -152,9 +113,9 @@ function ScreenHost({ state }: { state: ScenarioState }) {
           {scenario.structuredSummary.map((row) => (
             <div key={row.label} className="flex items-center justify-between gap-4">
               <div>
-        <p className="text-xs font-semibold uppercase text-sage-deep">
-          {row.label}
-        </p>
+                <p className="text-xs font-semibold uppercase text-sage-deep">
+                  {row.label}
+                </p>
                 <p className="mt-1 text-[16px] font-semibold leading-6">{row.value}</p>
               </div>
               <span className="text-ink-muted" aria-hidden="true">
