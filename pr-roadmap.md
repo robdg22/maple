@@ -71,4 +71,3 @@ This roadmap converts `concern-to-care-build-plan.md` into a sequence of small, 
 - Motion is calm (no overshoot/wobble), spring-based.
 - Component and screen files stay aligned to planned structure.
 - Notes include what was intentionally deferred to the next PR.
-
