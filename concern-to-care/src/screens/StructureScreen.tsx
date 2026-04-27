@@ -1,290 +1,344 @@
-import { useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
-import type { Variants } from 'framer-motion'
-import { Button } from '../components/Button'
-import { Card } from '../components/Card'
+import { HugeiconsIcon } from '@hugeicons/react'
+import type { IconSvgElement } from '@hugeicons/react'
+import {
+  AmbulanceIcon,
+  ArrowLeft01Icon,
+  Clock01Icon,
+  ConstellationIcon,
+  Edit03Icon,
+  Stethoscope02Icon,
+  ViewIcon,
+} from '@hugeicons/core-free-icons'
+import { ParticleCloudCanvas } from '../components/ParticleCloudCanvas'
 import { scenario } from '../data/scenario'
+import type { TextBoxTransitionRect } from '../types/transitions'
 
 type StructuredRow = (typeof scenario.structuredSummary)[number]
 
 type StructureScreenProps = {
   concernText: string
-  onComplete: () => void
+  transitionTextBoxRect?: TextBoxTransitionRect | null
+  onBack: () => void
 }
 
-const spring = { type: 'spring', stiffness: 280, damping: 26, mass: 0.9 } as const
-
-const itemVariants: Variants = {
-  hidden: { opacity: 0, y: 10 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: spring,
-  },
+type CareBriefRow = StructuredRow & {
+  icon: IconSvgElement
 }
 
-const summaryVariants: Variants = {
-  hidden: { opacity: 0, y: 10, scale: 0.98 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    scale: 1,
-    transition: spring,
-  },
-}
+const LOADER_DURATION = 4000
+const ROW_REVEAL_INTERVAL = 320
+const CARE_GUIDE_QUOTE_TOP = 78
 
-const rowVariants: Variants = {
-  hidden: {},
-  visible: (index = 0) => ({
-    transition: {
-      delayChildren: 0.18 + index * 0.08,
-      staggerChildren: 0.04,
-    },
-  }),
-}
+const cardTransition = {
+  duration: 0.6,
+  ease: [0.215, 0.61, 0.355, 1],
+} as const
 
-const rowPartVariants: Variants = {
-  hidden: { opacity: 0, x: -4 },
-  visible: {
-    opacity: 1,
-    x: 0,
-    transition: { type: 'spring', stiffness: 260, damping: 24, mass: 0.9 },
-  },
-}
+const quoteTransition = {
+  duration: 0.56,
+  ease: [0.645, 0.045, 0.355, 1],
+} as const
+
+const headerTransition = {
+  duration: 0.3,
+  ease: [0.215, 0.61, 0.355, 1],
+} as const
+
+const rowTransition = {
+  duration: 0.42,
+  ease: [0.23, 1, 0.32, 1],
+} as const
+
+const rowIcons = [
+  Stethoscope02Icon,
+  ConstellationIcon,
+  Clock01Icon,
+  ViewIcon,
+] satisfies IconSvgElement[]
 
 export function StructureScreen({
   concernText,
-  onComplete,
+  transitionTextBoxRect,
+  onBack,
 }: StructureScreenProps) {
   const reduceMotion = useReducedMotion()
-  const [editingRow, setEditingRow] = useState<StructuredRow | null>(null)
-  const [draftValue, setDraftValue] = useState('')
+  const [isLoading, setIsLoading] = useState(true)
+  const [visibleRowCount, setVisibleRowCount] = useState(0)
+  const displayedConcern = concernText.trim() || scenario.concern
 
-  function openEditor(row: StructuredRow) {
-    setEditingRow(row)
-    setDraftValue(row.value)
-  }
+  const careBriefRows = useMemo<CareBriefRow[]>(
+    () =>
+      scenario.structuredSummary.map((row, index) => ({
+        ...row,
+        icon: rowIcons[index] ?? Stethoscope02Icon,
+      })),
+    [],
+  )
 
-  function closeEditor() {
-    setEditingRow(null)
-    setDraftValue('')
-  }
+  useEffect(() => {
+    const loaderTimer = window.setTimeout(
+      () => setIsLoading(false),
+      reduceMotion ? 200 : LOADER_DURATION,
+    )
+
+    return () => window.clearTimeout(loaderTimer)
+  }, [reduceMotion])
+
+  useEffect(() => {
+    if (isLoading) {
+      setVisibleRowCount(0)
+      return undefined
+    }
+
+    if (reduceMotion) {
+      setVisibleRowCount(careBriefRows.length)
+      return undefined
+    }
+
+    let nextRow = 0
+    let revealTimer: number | undefined
+
+    const revealNextRow = () => {
+      nextRow += 1
+      setVisibleRowCount(nextRow)
+
+      if (nextRow < careBriefRows.length) {
+        revealTimer = window.setTimeout(revealNextRow, ROW_REVEAL_INTERVAL)
+      }
+    }
+
+    revealTimer = window.setTimeout(revealNextRow, 460)
+
+    return () => {
+      if (revealTimer) {
+        window.clearTimeout(revealTimer)
+      }
+    }
+  }, [careBriefRows.length, isLoading, reduceMotion])
 
   return (
-    <section className="flex min-h-full flex-col gap-3">
-      <motion.div
-        initial={reduceMotion ? false : { opacity: 0, y: 8, scale: 0.98 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-        transition={spring}
-      >
-        <Card
-          variant="soft"
-          className="line-clamp-1 p-3 text-sm leading-5 text-ink-soft"
-        >
-          <span className="mr-1 text-sage-deep" aria-hidden="true">
-            &ldquo;
-          </span>
-          {concernText}
-        </Card>
-      </motion.div>
+    <section className="relative h-full overflow-hidden bg-[#f7f4ee] text-ink">
+      <CareGuideHeader onBack={onBack} reduceMotion={Boolean(reduceMotion)} />
 
-      <motion.h1
-        variants={itemVariants}
-        initial={reduceMotion ? false : 'hidden'}
-        animate="visible"
-        className="text-[25px] font-bold leading-[1.14]"
-      >
-        Here's what we understood
-      </motion.h1>
+      <main className="scrollbar-none absolute inset-x-0 bottom-[66px] top-[66px] overflow-y-auto pb-8 pt-3">
+        <div className="relative z-10 px-4">
+          <ConcernQuote
+            concernText={displayedConcern}
+            reduceMotion={Boolean(reduceMotion)}
+            transitionTextBoxRect={transitionTextBoxRect}
+          />
 
-      <motion.div
-        variants={summaryVariants}
-        initial={reduceMotion ? false : 'hidden'}
-        animate="visible"
-      >
-        <Card variant="elevated" className="overflow-hidden p-0">
-          <div className="divide-y divide-line">
-            {scenario.structuredSummary.map((row, index) => (
-              <SummaryRow
-                key={row.label}
-                row={row}
-                index={index}
-                reduceMotion={Boolean(reduceMotion)}
-                onEdit={() => openEditor(row)}
-              />
-            ))}
-          </div>
-        </Card>
-      </motion.div>
+          <AnimatePresence mode="wait">
+            {!isLoading ? (
+              <motion.article
+                key="care-brief"
+                className="mt-10 rounded bg-[#fefaf4] p-4 shadow-[0_2px_2px_1px_rgb(0_0_0_/_6%),0_1px_1px_0.5px_rgb(0_0_0_/_8%),0_0_0_1px_rgb(0_0_0_/_12%)]"
+                initial={reduceMotion ? false : { opacity: 0, y: 26 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={cardTransition}
+              >
+                <h2 className="text-xl leading-6 text-ink">Care brief</h2>
 
-      <motion.div
-        initial={reduceMotion ? false : { opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ ...spring, delay: reduceMotion ? 0 : 0.62 }}
-      >
-        <Card variant="soft" className="p-3 text-xs font-medium leading-5 text-sage-deep">
-          Tap any row to correct what we understood.
-        </Card>
-      </motion.div>
+                <div className="mt-5">
+                  <AnimatePresence initial={false}>
+                    {careBriefRows.slice(0, visibleRowCount).map((row, index) => (
+                      <CareBriefField
+                        key={row.label}
+                        row={row}
+                        showDivider={index < visibleRowCount - 1}
+                      />
+                    ))}
+                  </AnimatePresence>
+                </div>
+              </motion.article>
+            ) : null}
+          </AnimatePresence>
+        </div>
 
-      <motion.div
-        initial={reduceMotion ? false : { opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ ...spring, delay: reduceMotion ? 0 : 0.9 }}
-        className="pt-1"
-      >
-        <Button type="button" className="w-full" onClick={onComplete}>
-          Continue
-        </Button>
-      </motion.div>
+        <AnimatePresence>
+          {isLoading ? (
+            <motion.div
+              key="loader"
+              className="pointer-events-none absolute inset-x-0 bottom-0 z-0 h-[376px] overflow-hidden"
+              initial={reduceMotion ? false : { opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={reduceMotion ? { opacity: 0 } : { opacity: 0 }}
+              transition={{
+                duration: reduceMotion ? 0 : 0.58,
+                delay: reduceMotion ? 0 : 0.16,
+                ease: 'easeOut',
+              }}
+            >
+              <DitherLoader />
+            </motion.div>
+          ) : null}
+        </AnimatePresence>
+      </main>
 
-      <EditSheet
-        row={editingRow}
-        draftValue={draftValue}
-        onDraftChange={setDraftValue}
-        onClose={closeEditor}
-      />
+      <CareGuideFooter />
     </section>
   )
 }
 
-function SummaryRow({
-  row,
-  index,
+function CareGuideHeader({
+  onBack,
   reduceMotion,
-  onEdit,
 }: {
-  row: StructuredRow
-  index: number
+  onBack: () => void
   reduceMotion: boolean
-  onEdit: () => void
 }) {
   return (
-    <motion.button
-      type="button"
-      variants={rowVariants}
-      custom={index}
-      initial={reduceMotion ? false : 'hidden'}
-      animate="visible"
-      onClick={onEdit}
-      className="flex min-h-[56px] w-full items-center justify-between gap-4 bg-surface px-4 py-2.5 text-left transition-colors hover:bg-surface-soft/60 focus-visible:outline focus-visible:outline-2 focus-visible:outline-inset focus-visible:outline-sage"
-      aria-label={`Edit ${row.label}: ${row.value}`}
+    <motion.header
+      className="absolute inset-x-0 top-0 z-10 grid h-[66px] grid-cols-[24px_1fr_24px] items-center px-4 py-2.5"
+      initial={reduceMotion ? false : { opacity: 0, x: 28 }}
+      animate={{ opacity: 1, x: 0 }}
+      transition={headerTransition}
     >
-      <span className="min-w-0">
-        <motion.span
-          variants={rowPartVariants}
-          className="block text-[11px] font-semibold uppercase leading-4 text-sage-deep"
-        >
-          {row.label}
-        </motion.span>
-        <motion.span
-          variants={rowPartVariants}
-          className="block text-[15px] font-semibold leading-5 text-ink"
-        >
-          {row.value}
-        </motion.span>
-      </span>
-      <motion.span
-        variants={rowPartVariants}
-        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-line text-ink-muted"
-        aria-hidden="true"
+      <motion.button
+        type="button"
+        onClick={onBack}
+        className="-ml-1 flex h-8 w-8 items-center justify-center text-ink"
+        aria-label="Go back"
+        initial={reduceMotion ? false : { opacity: 0, x: 12 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ ...headerTransition, delay: reduceMotion ? 0 : 0.08 }}
       >
-        <PencilIcon />
-      </motion.span>
-    </motion.button>
+        <HugeiconsIcon icon={ArrowLeft01Icon} size={24} strokeWidth={1.7} />
+      </motion.button>
+      <h1 className="text-center text-xl leading-6 text-sage">Care guide</h1>
+      <span aria-hidden="true" />
+    </motion.header>
   )
 }
 
-function EditSheet({
-  row,
-  draftValue,
-  onDraftChange,
-  onClose,
+function ConcernQuote({
+  concernText,
+  reduceMotion,
+  transitionTextBoxRect,
 }: {
-  row: StructuredRow | null
-  draftValue: string
-  onDraftChange: (value: string) => void
-  onClose: () => void
+  concernText: string
+  reduceMotion: boolean
+  transitionTextBoxRect?: TextBoxTransitionRect | null
 }) {
-  const reduceMotion = useReducedMotion()
+  const initialY = transitionTextBoxRect
+    ? transitionTextBoxRect.top - CARE_GUIDE_QUOTE_TOP
+    : 12
 
   return (
-    <AnimatePresence>
-      {row ? (
-        <motion.div
-          className="absolute inset-0 z-20 flex items-end"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-        >
-          <button
-            type="button"
-            className="absolute inset-0 bg-ink/24"
-            aria-label="Close edit sheet"
-            onClick={onClose}
-          />
-          <motion.div
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="edit-sheet-title"
-            className="relative w-full rounded-t-[28px] border border-line bg-surface p-5 shadow-card"
-            initial={reduceMotion ? false : { y: '100%' }}
-            animate={{ y: 0 }}
-            exit={reduceMotion ? { opacity: 0 } : { y: '100%' }}
-            transition={{ type: 'spring', stiffness: 260, damping: 28, mass: 0.95 }}
-            drag={reduceMotion ? false : 'y'}
-            dragConstraints={{ top: 0, bottom: 0 }}
-            dragElastic={{ top: 0, bottom: 0.28 }}
-            onDragEnd={(_, info) => {
-              if (info.offset.y > 90 || info.velocity.y > 520) {
-                onClose()
+    <section className="relative z-10 pt-0">
+      <motion.div
+        className="rounded bg-white p-4 text-[14px] font-medium leading-[18px] text-[#8a8a8a] shadow-[0_2px_2px_1px_rgb(0_0_0_/_6%),0_1px_1px_0.5px_rgb(0_0_0_/_8%),0_0_0_1px_rgb(0_0_0_/_12%)] [font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace]"
+        initial={
+          reduceMotion
+            ? false
+            : {
+                opacity: transitionTextBoxRect ? 1 : 0,
+                y: initialY,
+                backgroundColor: '#ffffff',
+                borderRadius: 8,
               }
-            }}
-          >
-            <div className="mx-auto mb-5 h-1.5 w-12 rounded-full bg-line" />
-            <p className="text-xs font-semibold uppercase text-sage-deep">
-              Edit understanding
-            </p>
-            <h2 id="edit-sheet-title" className="mt-2 text-xl font-bold leading-7">
-              {row.label}
-            </h2>
-            <label className="mt-5 block text-sm font-semibold text-ink-soft">
-              What should this say?
-              <input
-                value={draftValue}
-                onChange={(event) => onDraftChange(event.target.value)}
-                className="mt-2 h-12 w-full rounded-2xl border border-line bg-surface-soft px-4 text-[16px] font-semibold text-ink outline-none transition-colors focus:border-sage"
-              />
-            </label>
-            <div className="mt-5 grid grid-cols-2 gap-3">
-              <Button type="button" variant="secondary" onClick={onClose}>
-                Cancel
-              </Button>
-              <Button type="button" onClick={onClose}>
-                Save
-              </Button>
-            </div>
-          </motion.div>
-        </motion.div>
-      ) : null}
-    </AnimatePresence>
+        }
+        animate={{
+          opacity: 1,
+          y: 0,
+          backgroundColor: '#ffffff',
+          borderRadius: 4,
+        }}
+        transition={quoteTransition}
+      >
+        &ldquo;{concernText}&rdquo;
+      </motion.div>
+    </section>
   )
 }
 
-function PencilIcon() {
+function DitherLoader() {
   return (
-    <svg
-      viewBox="0 0 24 24"
-      className="h-4 w-4"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
+    <ParticleCloudCanvas
+      cloudTime={3800}
+      coalesceTime={4000}
+      holdTime={1200}
+      disperseTime={2000}
+      pulseRate={0.6}
+      pulseAmount={0.3}
+      pulseSharpness={0.2}
+      pulseRectDamping={0.75}
+      speed={1.2}
+      distance={0.5}
+      rotation={0.75}
+      wobble={1.1}
+      spread={150}
+      tightness={0.9}
+      rectWidth={0.82}
+      rectHeight={1.2}
+      count={900}
+      size={2.6}
+      darkness={0.36}
+      bgColor="#F7F4EE"
+      particleColor="#EFEAE1"
+      className="absolute inset-x-0 bottom-0 block h-[376px] w-full"
+    />
+  )
+}
+
+function CareBriefField({
+  row,
+  showDivider,
+}: {
+  row: CareBriefRow
+  showDivider: boolean
+}) {
+  return (
+    <motion.div
+      className="overflow-hidden"
+      initial={{ opacity: 0, maxHeight: 0, y: 10 }}
+      animate={{ opacity: 1, maxHeight: 140, y: 0 }}
+      exit={{ opacity: 0, maxHeight: 0, y: -2 }}
+      transition={rowTransition}
     >
-      <path d="M12 20h9" />
-      <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
-    </svg>
+      <motion.button
+        type="button"
+        className="flex min-h-[47px] w-full items-start justify-between gap-4 text-left"
+        aria-label={`Edit ${row.label}: ${row.value}`}
+      >
+        <span className="flex min-w-0 gap-2.5">
+          <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center text-[#8a8a8a]">
+            <HugeiconsIcon icon={row.icon} size={20} strokeWidth={1.6} />
+          </span>
+          <span className="min-w-0">
+            <span className="block text-[14px] font-medium uppercase leading-[17px] text-[#8a8a8a]">
+              {row.label}
+            </span>
+            <span className="mt-1 block text-[16px] font-medium leading-[20px] text-[#5a5a55]">
+              {row.value}
+            </span>
+          </span>
+        </span>
+        <span className="mt-[23px] flex h-5 w-5 shrink-0 items-center justify-center text-[#8a8a8a]">
+          <HugeiconsIcon icon={Edit03Icon} size={20} strokeWidth={1.6} />
+        </span>
+      </motion.button>
+
+      {showDivider ? <div className="my-3 h-px w-full bg-[#e5e0d6]" /> : null}
+    </motion.div>
+  )
+}
+
+function CareGuideFooter() {
+  return (
+    <footer className="absolute inset-x-0 bottom-0 z-10 flex h-[66px] items-center justify-between bg-[#f7f4ee] px-4 py-2.5">
+      <div className="flex items-center gap-2 text-ink">
+        <HugeiconsIcon icon={AmbulanceIcon} size={24} strokeWidth={1.7} />
+        <span className="text-[16px] font-medium leading-5">Need urgent help?</span>
+      </div>
+      <button
+        type="button"
+        className="h-[46px] rounded bg-sage px-4 text-[16px] font-medium leading-5 text-[#fefaf4]"
+      >
+        Get help now
+      </button>
+    </footer>
   )
 }

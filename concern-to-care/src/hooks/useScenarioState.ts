@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { scenario } from '../data/scenario'
 
 export const scenarioScreens = [
+  'dashboard',
   'concern',
   'structuring',
   'structure',
@@ -22,7 +23,7 @@ const flowScreens = scenarioScreens.filter(
 ) as Exclude<ScenarioScreen, 'preview'>[]
 
 export function useScenarioState() {
-  const [screen, setScreen] = useState<ScenarioScreen>('concern')
+  const [screen, setScreen] = useState<ScenarioScreen>('dashboard')
   const [history, setHistory] = useState<ScenarioScreen[]>([])
   const [concernText, setConcernText] = useState<string>('')
   const [selectedClarifyingAnswer, setSelectedClarifyingAnswer] =
@@ -58,7 +59,7 @@ export function useScenarioState() {
   }
 
   function reset() {
-    setScreen('concern')
+    setScreen('dashboard')
     setHistory([])
     setConcernText('')
     setSelectedClarifyingAnswer(null)

@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { Button } from '../components/Button'
 import { Card } from '../components/Card'
 import { PhoneFrame } from '../components/PhoneFrame'
@@ -8,34 +9,58 @@ import { BookingScreen } from '../screens/BookingScreen'
 import { ClarifyingScreen } from '../screens/ClarifyingScreen'
 import { ConfirmationScreen } from '../screens/ConfirmationScreen'
 import { ConcernScreen } from '../screens/ConcernScreen'
+import { DashboardScreen } from '../screens/DashboardScreen'
 import { HandoffScreen } from '../screens/HandoffScreen'
 import { RecommendationScreen } from '../screens/RecommendationScreen'
 import { StructureScreen } from '../screens/StructureScreen'
 import { StructuringScreen } from '../screens/StructuringScreen'
+import type { TextBoxTransitionRect } from '../types/transitions'
 
 export function App() {
   const state = useScenarioState()
+  const [summaryTransitionRect, setSummaryTransitionRect] =
+    useState<TextBoxTransitionRect | null>(null)
 
   return (
     <div className="min-h-svh text-ink">
       <PhoneFrame>
-        <Screen screenKey={state.screen}>
-          <Header
-            canGoBack={state.canGoBack}
-            onBack={state.goBack}
-            onPreview={() => state.goTo('preview')}
+        {state.screen === 'dashboard' ? (
+          <DashboardScreen
+            concernText={state.concernText}
+            onConcernChange={state.setConcernText}
+            onBookAppointment={() => state.goTo('booking')}
+            onUpcomingAppointments={() => state.goTo('booking')}
+            onCareBriefs={() => state.goTo('handoff')}
+            onSubmitSymptoms={(textBoxRect) => {
+              setSummaryTransitionRect(textBoxRect ?? null)
+              state.goTo('structure')
+            }}
           />
-          <div className="scrollbar-none -mx-5 flex min-h-0 flex-1 flex-col overflow-y-auto px-5 pb-12">
-            {state.screen === 'preview' ? (
-              <ComponentPreview
-                selectedAnswer={state.selectedClarifyingAnswer}
-                onSelectAnswer={state.setSelectedClarifyingAnswer}
-              />
-            ) : (
-              <ScreenHost state={state} />
-            )}
-          </div>
-        </Screen>
+        ) : state.screen === 'structure' ? (
+          <StructureScreen
+            concernText={state.concernText}
+            transitionTextBoxRect={summaryTransitionRect}
+            onBack={state.goBack}
+          />
+        ) : (
+          <Screen screenKey={state.screen}>
+            <Header
+              canGoBack={state.canGoBack}
+              onBack={state.goBack}
+              onPreview={() => state.goTo('preview')}
+            />
+            <div className="scrollbar-none -mx-5 flex min-h-0 flex-1 flex-col overflow-y-auto px-5 pb-12">
+              {state.screen === 'preview' ? (
+                <ComponentPreview
+                  selectedAnswer={state.selectedClarifyingAnswer}
+                  onSelectAnswer={state.setSelectedClarifyingAnswer}
+                />
+              ) : (
+                <ScreenHost state={state} />
+              )}
+            </div>
+          </Screen>
+        )}
       </PhoneFrame>
     </div>
   )
@@ -104,15 +129,6 @@ function ScreenHost({ state }: { state: ScenarioState }) {
       <StructuringScreen
         concernText={state.concernText}
         onComplete={() => state.goTo('structure')}
-      />
-    )
-  }
-
-  if (state.screen === 'structure') {
-    return (
-      <StructureScreen
-        concernText={state.concernText}
-        onComplete={() => state.goTo('clarify')}
       />
     )
   }

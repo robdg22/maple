@@ -127,7 +127,7 @@ export function ConcernScreen({
             }}
             placeholder="A few sentences is enough."
             rows={1}
-            className="max-h-72 min-h-44 w-full resize-none overflow-hidden border-0 border-b border-line bg-transparent pb-4 text-[16px] leading-6 text-ink outline-none transition-colors placeholder:text-ink-muted focus:border-sage"
+            className="max-h-72 min-h-44 w-full resize-none overflow-hidden border-0 border-b border-line bg-transparent pb-4 text-[16px] leading-6 text-ink outline-none transition-colors placeholder:text-ink-muted focus:border-sage [font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace]"
           />
         </motion.div>
         <motion.p variants={itemVariants} className="mt-4 text-sm leading-5 text-ink-soft">

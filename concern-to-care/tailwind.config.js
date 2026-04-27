@@ -20,7 +20,13 @@ export default {
         'alert-soft': 'var(--alert-soft)',
       },
       fontFamily: {
-        sans: ['"Plus Jakarta Sans"', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        sans: ['"Inter"', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        heading: ['"IBM Plex Sans"', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+      },
+      fontWeight: {
+        medium: '500',
+        semibold: '600',
+        bold: '600',
       },
       boxShadow: {
         phone: '0 28px 80px rgb(26 26 26 / 18%)',
