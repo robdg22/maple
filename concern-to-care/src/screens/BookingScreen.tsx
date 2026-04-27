@@ -1,7 +1,13 @@
 import { useState } from 'react'
 import { motion, useReducedMotion } from 'framer-motion'
 import type { Variants } from 'framer-motion'
-import { Card } from '../components/Card'
+import { HugeiconsIcon } from '@hugeicons/react'
+import {
+  Calendar01Icon,
+  Clock01Icon,
+  FileVerifiedIcon,
+  Location01Icon,
+} from '@hugeicons/core-free-icons'
 import { scenario } from '../data/scenario'
 import type { BookingSlotId } from '../hooks/useScenarioState'
 
@@ -13,6 +19,8 @@ type BookingScreenProps = {
 
 const spring = { type: 'spring', stiffness: 280, damping: 26, mass: 0.9 } as const
 const snappySpring = { type: 'spring', stiffness: 400, damping: 30, mass: 0.5 } as const
+const paperShadow =
+  'shadow-[0_2px_2px_1px_rgb(0_0_0_/_6%),0_1px_1px_0.5px_rgb(0_0_0_/_8%),0_0_0_1px_rgb(0_0_0_/_12%)]'
 
 const fadeUp: Variants = {
   hidden: { opacity: 0, y: 12 },
@@ -33,19 +41,32 @@ export function BookingScreen({ onSelectSlot }: BookingScreenProps) {
   }
 
   return (
-    <section className="flex min-h-full flex-col gap-5">
+    <section className="flex min-h-full flex-col gap-5 bg-[#f7f4ee] text-ink">
       <motion.div
         variants={fadeUp}
         initial={reduceMotion ? false : 'hidden'}
         animate="visible"
       >
-        <p className="mb-3 text-xs font-semibold uppercase text-sage-deep">
-          Booking
-        </p>
-        <h1 className="text-[30px] font-bold leading-[1.1]">GP appointments</h1>
-        <p className="mt-2 text-[16px] font-semibold text-ink-soft">
+        <div className="mb-3 flex items-center gap-2 text-sage-deep">
+          <HugeiconsIcon icon={Calendar01Icon} size={20} strokeWidth={1.7} />
+          <p className="text-xs font-semibold uppercase">Booking</p>
+        </div>
+        <h1 className="text-[30px] font-semibold leading-[1.08] text-[#5a5a55]">
+          GP appointments
+        </h1>
+        <p className="mt-2 text-[16px] font-semibold text-[#5a5a55]">
           Same- or next-day, near you
         </p>
+      </motion.div>
+
+      <motion.div
+        variants={fadeUp}
+        initial={reduceMotion ? false : 'hidden'}
+        animate="visible"
+        custom={reduceMotion ? 0 : 0.1}
+        className={`rounded bg-white p-4 text-[14px] font-medium leading-[18px] text-[#8a8a8a] ${paperShadow} [font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace]`}
+      >
+        {scenario.recommendation.summary}
       </motion.div>
 
       <div className="grid gap-3">
@@ -59,35 +80,51 @@ export function BookingScreen({ onSelectSlot }: BookingScreenProps) {
               variants={fadeUp}
               initial={reduceMotion ? false : 'hidden'}
               animate="visible"
-              custom={reduceMotion ? 0 : 0.12 + index * 0.07}
-              whileTap={reduceMotion ? undefined : { scale: 0.98 }}
+              custom={reduceMotion ? 0 : 0.18 + index * 0.07}
+              whileTap={reduceMotion ? undefined : { scale: 0.985 }}
               transition={snappySpring}
               onClick={() => chooseSlot(slot)}
-              className="text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sage"
+              className={[
+                `rounded p-4 text-left transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sage ${paperShadow}`,
+                isSelected ? 'bg-sage text-[#fefaf4]' : 'bg-[#fefaf4] text-ink hover:bg-white',
+              ].join(' ')}
             >
-              <Card
-                variant="base"
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <p
+                    className={[
+                      'text-xs font-semibold uppercase',
+                      isSelected ? 'text-[#fefaf4]/80' : 'text-sage-deep',
+                    ].join(' ')}
+                  >
+                    {slot.day}
+                  </p>
+                  <p className="mt-1 flex items-center gap-2 text-[27px] font-semibold leading-8">
+                    <HugeiconsIcon icon={Clock01Icon} size={21} strokeWidth={1.7} />
+                    {slot.time}
+                  </p>
+                </div>
+                <span
+                  className={[
+                    'rounded px-3 py-1 text-xs font-semibold',
+                    isSelected
+                      ? 'bg-[#fefaf4]/15 text-[#fefaf4]'
+                      : 'bg-white text-[#5a5a55] shadow-[0_0_0_1px_rgb(0_0_0_/_8%)]',
+                  ].join(' ')}
+                >
+                  {slot.distance}
+                </span>
+              </div>
+              <p className="mt-3 text-sm font-semibold">{slot.clinician}</p>
+              <p
                 className={[
-                  'p-4 transition-colors',
-                  isSelected ? 'border-sage bg-sage-soft' : 'hover:border-sage',
+                  'mt-1 flex items-center gap-2 text-sm font-medium leading-5',
+                  isSelected ? 'text-[#fefaf4]/85' : 'text-[#5a5a55]',
                 ].join(' ')}
               >
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <p className="text-xs font-semibold uppercase text-sage-deep">
-                      {slot.day}
-                    </p>
-                    <p className="mt-1 text-[26px] font-bold leading-8 text-ink">
-                      {slot.time}
-                    </p>
-                  </div>
-                  <span className="rounded-full bg-surface-soft px-3 py-1 text-xs font-semibold text-ink-soft">
-                    {slot.distance}
-                  </span>
-                </div>
-                <p className="mt-3 text-sm font-bold text-ink">{slot.clinician}</p>
-                <p className="mt-1 text-sm leading-5 text-ink-soft">{slot.clinic}</p>
-              </Card>
+                <HugeiconsIcon icon={Location01Icon} size={16} strokeWidth={1.7} />
+                {slot.clinic}
+              </p>
             </motion.button>
           )
         })}
@@ -98,7 +135,7 @@ export function BookingScreen({ onSelectSlot }: BookingScreenProps) {
         variants={fadeUp}
         initial={reduceMotion ? false : 'hidden'}
         animate="visible"
-        custom={reduceMotion ? 0 : 0.4}
+        custom={reduceMotion ? 0 : 0.42}
         className="w-fit text-sm font-semibold text-sage-deep underline decoration-sage/40 underline-offset-4"
       >
         Show more times
@@ -108,12 +145,13 @@ export function BookingScreen({ onSelectSlot }: BookingScreenProps) {
         variants={fadeUp}
         initial={reduceMotion ? false : 'hidden'}
         animate="visible"
-        custom={reduceMotion ? 0 : 0.48}
-        className="mt-auto"
+        custom={reduceMotion ? 0 : 0.5}
+        className="mt-auto rounded bg-[#fefaf4] p-4 text-sm font-medium leading-5 text-sage-deep shadow-[0_0_0_1px_rgb(0_0_0_/_10%)]"
       >
-        <Card variant="soft" className="p-4 text-sm font-medium leading-5 text-sage-deep">
-          Your care brief will be sent to your GP automatically when you book.
-        </Card>
+        <div className="flex gap-3">
+          <HugeiconsIcon icon={FileVerifiedIcon} size={20} strokeWidth={1.7} />
+          <p>Your care brief will be sent to your GP automatically when you book.</p>
+        </div>
       </motion.div>
     </section>
   )

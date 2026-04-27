@@ -21,6 +21,7 @@ type StructureScreenProps = {
   concernText: string
   transitionTextBoxRect?: TextBoxTransitionRect | null
   onBack: () => void
+  onContinue: () => void
 }
 
 type CareBriefRow = StructuredRow & {
@@ -62,6 +63,7 @@ export function StructureScreen({
   concernText,
   transitionTextBoxRect,
   onBack,
+  onContinue,
 }: StructureScreenProps) {
   const reduceMotion = useReducedMotion()
   const [isLoading, setIsLoading] = useState(true)
@@ -76,6 +78,7 @@ export function StructureScreen({
       })),
     [],
   )
+  const briefComplete = !isLoading && visibleRowCount === careBriefRows.length
 
   useEffect(() => {
     const loaderTimer = window.setTimeout(
@@ -122,7 +125,7 @@ export function StructureScreen({
     <section className="relative h-full overflow-hidden bg-[#f7f4ee] text-ink">
       <CareGuideHeader onBack={onBack} reduceMotion={Boolean(reduceMotion)} />
 
-      <main className="scrollbar-none absolute inset-x-0 bottom-[66px] top-[66px] overflow-y-auto pb-8 pt-3">
+      <main className="scrollbar-none absolute inset-x-0 bottom-[134px] top-[66px] overflow-y-auto pb-8 pt-3">
         <div className="relative z-10 px-4">
           <ConcernQuote
             concernText={displayedConcern}
@@ -177,7 +180,7 @@ export function StructureScreen({
         </AnimatePresence>
       </main>
 
-      <CareGuideFooter />
+      <CareGuideFooter canContinue={briefComplete} onContinue={onContinue} />
     </section>
   )
 }
@@ -326,19 +329,54 @@ function CareBriefField({
   )
 }
 
-function CareGuideFooter() {
+function CareGuideFooter({
+  canContinue,
+  onContinue,
+}: {
+  canContinue: boolean
+  onContinue: () => void
+}) {
   return (
-    <footer className="absolute inset-x-0 bottom-0 z-10 flex h-[66px] items-center justify-between bg-[#f7f4ee] px-4 py-2.5">
-      <div className="flex items-center gap-2 text-ink">
-        <HugeiconsIcon icon={AmbulanceIcon} size={24} strokeWidth={1.7} />
-        <span className="text-[16px] font-medium leading-5">Need urgent help?</span>
+    <footer className="absolute inset-x-0 bottom-0 z-10 flex h-[134px] flex-col gap-3 bg-[#f7f4ee]/95 px-4 pb-4 pt-2.5 shadow-[0_-1px_0_rgb(0_0_0_/_8%)] backdrop-blur">
+      <AnimatePresence initial={false}>
+        {canContinue ? (
+          <motion.button
+            key="continue"
+            type="button"
+            onClick={onContinue}
+            className="h-[50px] w-full rounded bg-sage px-4 text-[16px] font-semibold leading-5 text-[#fefaf4] shadow-[0_2px_2px_1px_rgb(0_0_0_/_6%),0_1px_1px_0.5px_rgb(0_0_0_/_8%),0_0_0_1px_rgb(0_0_0_/_12%)] transition-colors hover:bg-sage-deep focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sage"
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 8 }}
+            transition={{ type: 'spring', stiffness: 280, damping: 26, mass: 0.9 }}
+          >
+            Continue
+          </motion.button>
+        ) : (
+          <motion.div
+            key="waiting"
+            className="flex h-[50px] items-center justify-center rounded bg-[#efeae1] text-[14px] font-medium leading-5 text-[#8a8a8a]"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            Preparing your next step...
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <div className="flex min-h-11 items-center justify-between">
+        <div className="flex items-center gap-2 text-ink">
+          <HugeiconsIcon icon={AmbulanceIcon} size={22} strokeWidth={1.7} />
+          <span className="text-[15px] font-medium leading-5">Need urgent help?</span>
+        </div>
+        <button
+          type="button"
+          className="h-9 rounded bg-[#fefaf4] px-3 text-[14px] font-semibold leading-5 text-sage-deep shadow-[0_0_0_1px_rgb(0_0_0_/_10%)] transition-colors hover:bg-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sage"
+        >
+          Get help now
+        </button>
       </div>
-      <button
-        type="button"
-        className="h-[46px] rounded bg-sage px-4 text-[16px] font-medium leading-5 text-[#fefaf4]"
-      >
-        Get help now
-      </button>
     </footer>
   )
 }

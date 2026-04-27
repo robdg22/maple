@@ -41,6 +41,7 @@ export function App() {
             concernText={state.concernText}
             transitionTextBoxRect={summaryTransitionRect}
             onBack={state.goBack}
+            onContinue={() => state.goTo('clarify')}
           />
         ) : (
           <Screen screenKey={state.screen}>
@@ -83,7 +84,7 @@ function Header({
         type="button"
         onClick={canGoBack ? onBack : undefined}
         disabled={!canGoBack}
-        className="flex h-10 w-10 items-center justify-center rounded-full border border-line bg-surface text-sage-deep disabled:text-ink-muted"
+        className="flex h-10 w-10 items-center justify-center rounded bg-[#fefaf4] text-sage-deep shadow-[0_0_0_1px_rgb(0_0_0_/_10%)] transition-colors hover:bg-white disabled:text-ink-muted"
         aria-label="Go back"
       >
         <svg
@@ -105,7 +106,7 @@ function Header({
       <button
         type="button"
         onClick={onPreview}
-        className="h-10 rounded-full border border-line bg-surface px-3 text-xs font-semibold text-ink-soft"
+        className="h-10 rounded bg-[#fefaf4] px-3 text-xs font-semibold text-[#5a5a55] shadow-[0_0_0_1px_rgb(0_0_0_/_10%)] transition-colors hover:bg-white"
       >
         Preview
       </button>

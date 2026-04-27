@@ -1,8 +1,14 @@
 import { useState } from 'react'
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import type { Variants } from 'framer-motion'
-import { Button } from '../components/Button'
-import { Card } from '../components/Card'
+import { HugeiconsIcon } from '@hugeicons/react'
+import {
+  Add01Icon,
+  ArrowRight01Icon,
+  Edit03Icon,
+  FileVerifiedIcon,
+  RefreshIcon,
+} from '@hugeicons/core-free-icons'
 import { scenario } from '../data/scenario'
 import type { ClarifyingAnswer } from '../hooks/useScenarioState'
 
@@ -13,6 +19,14 @@ type HandoffScreenProps = {
 
 const spring = { type: 'spring', stiffness: 280, damping: 26, mass: 0.9 } as const
 const settleSpring = { type: 'spring', stiffness: 220, damping: 24, mass: 1.1 } as const
+const paperShadow =
+  'shadow-[0_2px_2px_1px_rgb(0_0_0_/_6%),0_1px_1px_0.5px_rgb(0_0_0_/_8%),0_0_0_1px_rgb(0_0_0_/_12%)]'
+
+const editActions = [
+  { label: 'Edit any section', icon: Edit03Icon },
+  { label: 'Add something we missed', icon: Add01Icon },
+  { label: 'Remove the brief and start fresh', icon: RefreshIcon },
+] as const
 
 const fadeUp: Variants = {
   hidden: { opacity: 0, y: 10 },
@@ -40,65 +54,67 @@ export function HandoffScreen({
   const [sheetTitle, setSheetTitle] = useState<string | null>(null)
 
   return (
-    <section className="flex min-h-full flex-col gap-4">
+    <section className="flex min-h-full flex-col gap-4 bg-[#f7f4ee] text-ink">
       <motion.div
         variants={fadeUp}
         initial={reduceMotion ? false : 'hidden'}
         animate="visible"
       >
-        <p className="mb-3 text-xs font-semibold uppercase text-sage-deep">
-          Handoff
-        </p>
-        <h1 className="text-[27px] font-bold leading-[1.12]">
+        <div className="mb-3 flex items-center gap-2 text-sage-deep">
+          <HugeiconsIcon icon={FileVerifiedIcon} size={20} strokeWidth={1.7} />
+          <p className="text-xs font-semibold uppercase">Care brief</p>
+        </div>
+        <h1 className="text-[28px] font-semibold leading-[1.1] text-[#5a5a55]">
           What we'll share with your GP
         </h1>
-        <p className="mt-3 text-[15px] leading-6 text-ink-soft">
+        <p className="mt-3 text-[15px] font-medium leading-6 text-[#5a5a55]">
           Your GP will see this before your appointment so you don't have to
           explain it again.
         </p>
       </motion.div>
 
-      <motion.div
-        initial={reduceMotion ? false : { opacity: 0, y: 10, scale: 0.96 }}
+      <motion.article
+        initial={reduceMotion ? false : { opacity: 0, y: 10, scale: 0.97 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         transition={settleSpring}
+        className={`overflow-hidden rounded bg-[#fefaf4] ${paperShadow}`}
       >
-        <Card variant="elevated" className="overflow-hidden p-0">
-          <div className="flex items-center justify-between bg-sage-deep px-4 py-3 text-white">
-            <div>
-              <p className="text-[11px] font-semibold uppercase opacity-80">
-                Care brief
+        <div className="flex items-center justify-between bg-sage-deep px-4 py-3 text-[#fefaf4]">
+          <div>
+            <p className="text-[11px] font-semibold uppercase opacity-80">
+              Prepared for GP review
+            </p>
+            <p className="text-sm font-semibold">Editable before booking</p>
+          </div>
+          <time className="font-mono text-xs opacity-85">
+            {scenario.handoff.date}
+          </time>
+        </div>
+        <div className="divide-y divide-[#e5e0d6]">
+          {scenario.handoff.sections.map((section, index) => (
+            <motion.section
+              key={section.title}
+              variants={sectionVariants}
+              custom={reduceMotion ? 0 : index}
+              initial={reduceMotion ? false : 'hidden'}
+              animate="visible"
+              className="px-4 py-3"
+            >
+              <h2 className="text-[12px] font-semibold uppercase leading-4 text-[#8a8a8a]">
+                {section.title}
+              </h2>
+              <p className="mt-2 text-sm font-medium leading-5 text-[#1a1a1a]">
+                {section.body}
               </p>
-              <p className="text-sm font-bold">Prepared for GP review</p>
-            </div>
-            <time className="font-mono text-xs opacity-85">
-              {scenario.handoff.date}
-            </time>
-          </div>
-          <div className="divide-y divide-line bg-surface">
-            {scenario.handoff.sections.map((section, index) => (
-              <motion.section
-                key={section.title}
-                variants={sectionVariants}
-                custom={reduceMotion ? 0 : index}
-                initial={reduceMotion ? false : 'hidden'}
-                animate="visible"
-                className="px-4 py-3"
-              >
-                <h2 className="border-b border-line pb-1 text-[11px] font-bold uppercase text-sage-deep">
-                  {section.title}
-                </h2>
-                <p className="mt-2 text-sm leading-5 text-ink">{section.body}</p>
-                {section.title === 'Symptom summary' ? (
-                  <p className="mt-2 text-xs font-semibold text-ink-soft">
-                    Clarifying answer: {selectedAnswer ?? 'Not recorded'}
-                  </p>
-                ) : null}
-              </motion.section>
-            ))}
-          </div>
-        </Card>
-      </motion.div>
+              {section.title === 'Symptom summary' ? (
+                <p className="mt-2 w-fit rounded bg-white px-2 py-1 text-xs font-semibold text-sage-deep shadow-[0_0_0_1px_rgb(0_0_0_/_8%)]">
+                  Clarifying answer: {selectedAnswer ?? 'Not recorded'}
+                </p>
+              ) : null}
+            </motion.section>
+          ))}
+        </div>
+      </motion.article>
 
       <motion.div
         variants={fadeUp}
@@ -107,19 +123,20 @@ export function HandoffScreen({
         custom={reduceMotion ? 0 : 0.46}
         className="grid gap-2"
       >
-        {['Edit any section', 'Add something we missed', 'Remove the brief and start fresh'].map(
-          (label) => (
-            <button
-              key={label}
-              type="button"
-              onClick={() => setSheetTitle(label)}
-              className="flex min-h-10 items-center justify-between rounded-button border border-line bg-surface px-3 text-left text-sm font-semibold text-ink-soft transition-colors hover:border-sage hover:text-sage-deep focus-visible:outline focus-visible:outline-2 focus-visible:outline-sage"
-            >
-              <span>{label}</span>
-              <ChevronIcon />
-            </button>
-          ),
-        )}
+        {editActions.map((action) => (
+          <button
+            key={action.label}
+            type="button"
+            onClick={() => setSheetTitle(action.label)}
+            className="flex min-h-11 items-center justify-between rounded bg-white px-3 text-left text-sm font-semibold text-[#5a5a55] shadow-[0_0_0_1px_rgb(0_0_0_/_8%)] transition-colors hover:bg-[#fefaf4] hover:text-sage-deep focus-visible:outline focus-visible:outline-2 focus-visible:outline-sage"
+          >
+            <span className="flex min-w-0 items-center gap-2.5">
+              <HugeiconsIcon icon={action.icon} size={18} strokeWidth={1.7} />
+              <span>{action.label}</span>
+            </span>
+            <ChevronIcon />
+          </button>
+        ))}
       </motion.div>
 
       <motion.p
@@ -139,9 +156,14 @@ export function HandoffScreen({
         custom={reduceMotion ? 0 : 0.66}
         className="mt-auto"
       >
-        <Button type="button" onClick={onContinue} className="w-full">
+        <button
+          type="button"
+          onClick={onContinue}
+          className={`flex min-h-[50px] w-full items-center justify-center gap-2 rounded bg-sage px-4 text-[16px] font-semibold leading-5 text-[#fefaf4] transition-colors hover:bg-sage-deep focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sage ${paperShadow}`}
+        >
           Continue to booking
-        </Button>
+          <HugeiconsIcon icon={ArrowRight01Icon} size={20} strokeWidth={1.7} />
+        </button>
       </motion.div>
 
       <PrototypeSheet title={sheetTitle} onClose={() => setSheetTitle(null)} />
@@ -177,26 +199,30 @@ function PrototypeSheet({
             role="dialog"
             aria-modal="true"
             aria-labelledby="prototype-sheet-title"
-            className="relative w-full rounded-t-[28px] border border-line bg-surface p-5 shadow-card"
+            className={`relative w-full rounded-t-[24px] bg-[#fefaf4] p-5 ${paperShadow}`}
             initial={reduceMotion ? false : { y: '100%' }}
             animate={{ y: 0 }}
             exit={reduceMotion ? { opacity: 0 } : { y: '100%' }}
             transition={{ type: 'spring', stiffness: 260, damping: 28, mass: 0.95 }}
           >
-            <div className="mx-auto mb-5 h-1.5 w-12 rounded-full bg-line" />
+            <div className="mx-auto mb-5 h-1.5 w-12 rounded-full bg-[#e5e0d6]" />
             <p className="text-xs font-semibold uppercase text-sage-deep">
               Prototype control
             </p>
-            <h2 id="prototype-sheet-title" className="mt-2 text-xl font-bold leading-7">
+            <h2 id="prototype-sheet-title" className="mt-2 text-xl font-semibold leading-7">
               {title}
             </h2>
-            <p className="mt-3 text-sm leading-5 text-ink-soft">
+            <p className="mt-3 text-sm font-medium leading-5 text-[#5a5a55]">
               Editing is not enabled in this prototype, but this is where the
               section review would happen.
             </p>
-            <Button type="button" onClick={onClose} className="mt-5 w-full">
+            <button
+              type="button"
+              onClick={onClose}
+              className={`mt-5 min-h-[48px] w-full rounded bg-sage px-4 text-[15px] font-semibold leading-5 text-[#fefaf4] ${paperShadow}`}
+            >
               Got it
-            </Button>
+            </button>
           </motion.div>
         </motion.div>
       ) : null}
@@ -208,7 +234,7 @@ function ChevronIcon() {
   return (
     <svg
       viewBox="0 0 24 24"
-      className="h-4 w-4"
+      className="h-4 w-4 shrink-0"
       fill="none"
       stroke="currentColor"
       strokeWidth="2"
