@@ -43,6 +43,40 @@ export function App() {
             onBack={state.goBack}
             onContinue={() => state.goTo('clarify')}
           />
+        ) : state.screen === 'clarify' ? (
+          <ClarifyingScreen
+            selectedAnswer={state.selectedClarifyingAnswer}
+            onBack={state.goBack}
+            onSelectAnswer={state.setSelectedClarifyingAnswer}
+            onComplete={() => state.goTo('recommend')}
+          />
+        ) : state.screen === 'recommend' ? (
+          <RecommendationScreen
+            selectedAnswer={state.selectedClarifyingAnswer}
+            onBack={state.goBack}
+            onBook={() => state.goTo('booking')}
+            onInspectHandoff={() => state.goTo('handoff')}
+          />
+        ) : state.screen === 'handoff' ? (
+          <HandoffScreen
+            selectedAnswer={state.selectedClarifyingAnswer}
+            onBack={state.goBack}
+            onContinue={() => state.goTo('booking')}
+          />
+        ) : state.screen === 'booking' ? (
+          <BookingScreen
+            onBack={state.goBack}
+            onSelectSlot={(slotId) => {
+              state.setSelectedBookingSlotId(slotId)
+              state.goTo('confirmation')
+            }}
+          />
+        ) : state.screen === 'confirmation' ? (
+          <ConfirmationScreen
+            selectedSlotId={state.selectedBookingSlotId}
+            onBack={state.goBack}
+            onRestart={state.reset}
+          />
         ) : (
           <Screen screenKey={state.screen}>
             <Header
@@ -130,55 +164,6 @@ function ScreenHost({ state }: { state: ScenarioState }) {
       <StructuringScreen
         concernText={state.concernText}
         onComplete={() => state.goTo('structure')}
-      />
-    )
-  }
-
-  if (state.screen === 'clarify') {
-    return (
-      <ClarifyingScreen
-        selectedAnswer={state.selectedClarifyingAnswer}
-        onSelectAnswer={state.setSelectedClarifyingAnswer}
-        onComplete={() => state.goTo('recommend')}
-      />
-    )
-  }
-
-  if (state.screen === 'recommend') {
-    return (
-      <RecommendationScreen
-        selectedAnswer={state.selectedClarifyingAnswer}
-        onBook={() => state.goTo('booking')}
-        onInspectHandoff={() => state.goTo('handoff')}
-      />
-    )
-  }
-
-  if (state.screen === 'handoff') {
-    return (
-      <HandoffScreen
-        selectedAnswer={state.selectedClarifyingAnswer}
-        onContinue={() => state.goTo('booking')}
-      />
-    )
-  }
-
-  if (state.screen === 'booking') {
-    return (
-      <BookingScreen
-        onSelectSlot={(slotId) => {
-          state.setSelectedBookingSlotId(slotId)
-          state.goTo('confirmation')
-        }}
-      />
-    )
-  }
-
-  if (state.screen === 'confirmation') {
-    return (
-      <ConfirmationScreen
-        selectedSlotId={state.selectedBookingSlotId}
-        onRestart={state.reset}
       />
     )
   }

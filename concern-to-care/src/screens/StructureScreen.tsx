@@ -3,13 +3,12 @@ import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import { HugeiconsIcon } from '@hugeicons/react'
 import type { IconSvgElement } from '@hugeicons/react'
 import {
-  AmbulanceIcon,
   ArrowLeft01Icon,
+  CheckmarkBadge01Icon,
   Clock01Icon,
   ConstellationIcon,
   Edit03Icon,
   Stethoscope02Icon,
-  ViewIcon,
 } from '@hugeicons/core-free-icons'
 import { ParticleCloudCanvas } from '../components/ParticleCloudCanvas'
 import { scenario } from '../data/scenario'
@@ -32,11 +31,6 @@ const LOADER_DURATION = 4000
 const ROW_REVEAL_INTERVAL = 320
 const CARE_GUIDE_QUOTE_TOP = 78
 
-const cardTransition = {
-  duration: 0.6,
-  ease: [0.215, 0.61, 0.355, 1],
-} as const
-
 const quoteTransition = {
   duration: 0.56,
   ease: [0.645, 0.045, 0.355, 1],
@@ -48,15 +42,20 @@ const headerTransition = {
 } as const
 
 const rowTransition = {
-  duration: 0.42,
+  duration: 0.24,
   ease: [0.23, 1, 0.32, 1],
+} as const
+
+const summaryPanelTransition = {
+  duration: 0.34,
+  ease: [0.215, 0.61, 0.355, 1],
 } as const
 
 const rowIcons = [
   Stethoscope02Icon,
   ConstellationIcon,
   Clock01Icon,
-  ViewIcon,
+  CheckmarkBadge01Icon,
 ] satisfies IconSvgElement[]
 
 export function StructureScreen({
@@ -100,8 +99,9 @@ export function StructureScreen({
       return undefined
     }
 
-    let nextRow = 0
+    let nextRow = 1
     let revealTimer: number | undefined
+    setVisibleRowCount(nextRow)
 
     const revealNextRow = () => {
       nextRow += 1
@@ -112,7 +112,7 @@ export function StructureScreen({
       }
     }
 
-    revealTimer = window.setTimeout(revealNextRow, 460)
+    revealTimer = window.setTimeout(revealNextRow, ROW_REVEAL_INTERVAL)
 
     return () => {
       if (revealTimer) {
@@ -122,79 +122,42 @@ export function StructureScreen({
   }, [careBriefRows.length, isLoading, reduceMotion])
 
   return (
-    <section className="relative h-full overflow-hidden bg-[#f7f4ee] text-ink">
-      <CareGuideHeader onBack={onBack} reduceMotion={Boolean(reduceMotion)} />
+    <section className="relative h-full overflow-hidden bg-[#fcfaf6] text-ink">
+      <SummaryHeader
+        title="Summary"
+        showHelp
+        onBack={onBack}
+        reduceMotion={Boolean(reduceMotion)}
+      />
 
-      <main className="scrollbar-none absolute inset-x-0 bottom-[134px] top-[66px] overflow-y-auto pb-8 pt-3">
-        <div className="relative z-10 px-4">
-          <ConcernQuote
-            concernText={displayedConcern}
-            reduceMotion={Boolean(reduceMotion)}
-            transitionTextBoxRect={transitionTextBoxRect}
-          />
-
-          <AnimatePresence mode="wait">
-            {!isLoading ? (
-              <motion.article
-                key="care-brief"
-                className="mt-10 rounded bg-[#fefaf4] p-4 shadow-[0_2px_2px_1px_rgb(0_0_0_/_6%),0_1px_1px_0.5px_rgb(0_0_0_/_8%),0_0_0_1px_rgb(0_0_0_/_12%)]"
-                initial={reduceMotion ? false : { opacity: 0, y: 26 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={cardTransition}
-              >
-                <h2 className="text-xl leading-6 text-ink">Care brief</h2>
-
-                <div className="mt-5">
-                  <AnimatePresence initial={false}>
-                    {careBriefRows.slice(0, visibleRowCount).map((row, index) => (
-                      <CareBriefField
-                        key={row.label}
-                        row={row}
-                        showDivider={index < visibleRowCount - 1}
-                      />
-                    ))}
-                  </AnimatePresence>
-                </div>
-              </motion.article>
-            ) : null}
-          </AnimatePresence>
-        </div>
-
-        <AnimatePresence>
-          {isLoading ? (
-            <motion.div
-              key="loader"
-              className="pointer-events-none absolute inset-x-0 bottom-0 z-0 h-[376px] overflow-hidden"
-              initial={reduceMotion ? false : { opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={reduceMotion ? { opacity: 0 } : { opacity: 0 }}
-              transition={{
-                duration: reduceMotion ? 0 : 0.58,
-                delay: reduceMotion ? 0 : 0.16,
-                ease: 'easeOut',
-              }}
-            >
-              <DitherLoader />
-            </motion.div>
-          ) : null}
-        </AnimatePresence>
-      </main>
-
-      <CareGuideFooter canContinue={briefComplete} onContinue={onContinue} />
+      <SummaryBody
+        concernText={displayedConcern}
+        careBriefRows={careBriefRows}
+        visibleRowCount={visibleRowCount}
+        isLoading={isLoading}
+        briefComplete={briefComplete}
+        reduceMotion={Boolean(reduceMotion)}
+        transitionTextBoxRect={transitionTextBoxRect}
+        onContinue={onContinue}
+      />
     </section>
   )
 }
 
-function CareGuideHeader({
+function SummaryHeader({
+  title,
+  showHelp,
   onBack,
   reduceMotion,
 }: {
+  title: string
+  showHelp?: boolean
   onBack: () => void
   reduceMotion: boolean
 }) {
   return (
     <motion.header
-      className="absolute inset-x-0 top-0 z-10 grid h-[66px] grid-cols-[24px_1fr_24px] items-center px-4 py-2.5"
+      className="absolute inset-x-0 top-0 z-30 grid h-[66px] grid-cols-[64px_1fr_88px] items-center bg-gradient-to-b from-[#fcfaf6] from-[70%] to-[#fcfaf600] px-4 py-2.5"
       initial={reduceMotion ? false : { opacity: 0, x: 28 }}
       animate={{ opacity: 1, x: 0 }}
       transition={headerTransition}
@@ -202,7 +165,7 @@ function CareGuideHeader({
       <motion.button
         type="button"
         onClick={onBack}
-        className="-ml-1 flex h-8 w-8 items-center justify-center text-ink"
+        className="-ml-1 flex size-8 items-center justify-center text-ink"
         aria-label="Go back"
         initial={reduceMotion ? false : { opacity: 0, x: 12 }}
         animate={{ opacity: 1, x: 0 }}
@@ -210,9 +173,159 @@ function CareGuideHeader({
       >
         <HugeiconsIcon icon={ArrowLeft01Icon} size={24} strokeWidth={1.7} />
       </motion.button>
-      <h1 className="text-center text-xl leading-6 text-sage">Care guide</h1>
-      <span aria-hidden="true" />
+      <h1 className="text-center text-[20px] font-semibold leading-5 text-[#1a1a1a]">
+        {title}
+      </h1>
+      {showHelp ? (
+        <button
+          type="button"
+          className="flex h-9 items-center justify-center whitespace-nowrap rounded border border-[#7a9e94] px-2 pb-1 pt-0.5 text-[16px] font-semibold leading-5 text-[#7a9e94] shadow-[0_0_0_1px_rgb(79_112_101_/_80%),0_1px_1px_0.5px_rgb(0_0_0_/_8%),0_2px_2px_1px_rgb(0_0_0_/_6%)]"
+        >
+          Get help
+        </button>
+      ) : (
+        <span aria-hidden="true" />
+      )}
     </motion.header>
+  )
+}
+
+function SummaryBody({
+  concernText,
+  careBriefRows,
+  visibleRowCount,
+  isLoading,
+  briefComplete,
+  reduceMotion,
+  transitionTextBoxRect,
+  onContinue,
+}: {
+  concernText: string
+  careBriefRows: CareBriefRow[]
+  visibleRowCount: number
+  isLoading: boolean
+  briefComplete: boolean
+  reduceMotion: boolean
+  transitionTextBoxRect?: TextBoxTransitionRect | null
+  onContinue: () => void
+}) {
+  return (
+    <motion.main
+      className="scrollbar-none absolute inset-x-0 bottom-0 top-[66px] touch-pan-y overflow-y-scroll overscroll-contain px-4 pb-20 pt-4 [-webkit-overflow-scrolling:touch]"
+    >
+      <motion.div
+        className="flex min-h-full flex-col items-center justify-end gap-4"
+        layout={!reduceMotion}
+        transition={summaryPanelTransition}
+      >
+        <motion.div layout={!reduceMotion} className="relative z-10 w-full px-2">
+          <ConcernQuote
+            concernText={concernText}
+            reduceMotion={reduceMotion}
+            transitionTextBoxRect={transitionTextBoxRect}
+            quoted={false}
+          />
+        </motion.div>
+
+        <AnimatePresence initial={false}>
+          {!isLoading ? (
+            <motion.p
+              key="summary-guidance"
+              className="w-full px-4 text-center text-[14px] font-medium leading-[18px] text-[#8a8a8a]"
+              initial={reduceMotion ? false : { opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: reduceMotion ? 0 : 0.22, ease: 'easeOut' }}
+            >
+              <strong className="font-bold">This is what we&apos;ve understood.</strong>{' '}
+              Tap to correct anything that looks off.
+            </motion.p>
+          ) : null}
+        </AnimatePresence>
+
+        <div className="relative flex w-full justify-center">
+          {isLoading ? (
+            <LoadingPanel reduceMotion={reduceMotion} />
+          ) : (
+            <SummaryCard
+              careBriefRows={careBriefRows}
+              visibleRowCount={visibleRowCount}
+              reduceMotion={reduceMotion}
+            />
+          )}
+        </div>
+
+        {isLoading ? (
+          <motion.p
+            className="-mt-2 text-center text-[14px] font-bold leading-[18px] text-[#8a8a8a]"
+            initial={reduceMotion ? false : { opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: reduceMotion ? 0 : 0.2, ease: 'easeOut' }}
+          >
+            Preparing your next step...
+          </motion.p>
+        ) : (
+          <AnimatePresence initial={false}>
+            <motion.button
+              key="continue-button"
+              type="button"
+              disabled={!briefComplete}
+              onClick={briefComplete ? onContinue : undefined}
+              className="mx-auto h-9 w-[calc(100%-32px)] rounded bg-[#7a9e94] px-4 pb-1 pt-0.5 text-[16px] font-semibold leading-5 text-white shadow-[0_0_0_1px_rgb(79_112_101_/_80%),0_1px_1px_0.5px_rgb(0_0_0_/_8%),0_2px_2px_1px_rgb(0_0_0_/_6%)] transition-opacity disabled:opacity-50"
+              initial={reduceMotion ? false : { opacity: 0 }}
+              animate={{ opacity: briefComplete ? 1 : 0.5 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: reduceMotion ? 0 : 0.22, ease: 'easeOut' }}
+            >
+              Continue
+            </motion.button>
+          </AnimatePresence>
+        )}
+      </motion.div>
+    </motion.main>
+  )
+}
+
+function LoadingPanel({ reduceMotion }: { reduceMotion: boolean }) {
+  return (
+    <motion.div
+      className="pointer-events-none relative mx-auto h-[352px] w-full max-w-full overflow-hidden"
+      initial={reduceMotion ? false : { opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={summaryPanelTransition}
+    >
+      <DitherLoader className="absolute left-1/2 top-1/2 h-[min(250px,34svh)] w-[min(316px,82vw)] -translate-x-1/2 -translate-y-1/2" />
+    </motion.div>
+  )
+}
+
+function SummaryCard({
+  careBriefRows,
+  visibleRowCount,
+  reduceMotion,
+}: {
+  careBriefRows: CareBriefRow[]
+  visibleRowCount: number
+  reduceMotion: boolean
+}) {
+  return (
+    <motion.article
+      className="w-full overflow-hidden rounded-xl bg-white px-3 pb-1.5 pt-3 shadow-[0_2px_2px_1px_rgb(0_0_0_/_6%),0_1px_1px_0.5px_rgb(0_0_0_/_8%),0_0_0_1px_rgb(0_0_0_/_12%)]"
+      initial={reduceMotion ? false : { opacity: 0, y: 24 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={summaryPanelTransition}
+    >
+      <div className="flex flex-col">
+        {careBriefRows.map((row, index) => (
+          <CareBriefRowSlot
+            key={row.label}
+            row={row}
+            isVisible={index < visibleRowCount}
+            showDivider={index < careBriefRows.length - 1}
+          />
+        ))}
+      </div>
+    </motion.article>
   )
 }
 
@@ -220,10 +333,12 @@ function ConcernQuote({
   concernText,
   reduceMotion,
   transitionTextBoxRect,
+  quoted = true,
 }: {
   concernText: string
   reduceMotion: boolean
   transitionTextBoxRect?: TextBoxTransitionRect | null
+  quoted?: boolean
 }) {
   const initialY = transitionTextBoxRect
     ? transitionTextBoxRect.top - CARE_GUIDE_QUOTE_TOP
@@ -232,7 +347,8 @@ function ConcernQuote({
   return (
     <section className="relative z-10 pt-0">
       <motion.div
-        className="rounded bg-white p-4 text-[14px] font-medium leading-[18px] text-[#8a8a8a] shadow-[0_2px_2px_1px_rgb(0_0_0_/_6%),0_1px_1px_0.5px_rgb(0_0_0_/_8%),0_0_0_1px_rgb(0_0_0_/_12%)] [font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace]"
+        layoutId="concern-text-box"
+        className="rounded-xl bg-white p-4 text-[14px] font-medium leading-[18px] text-[#8a8a8a] shadow-[0_0_0_1px_rgb(0_0_0_/_8%)] [font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace]"
         initial={
           reduceMotion
             ? false
@@ -240,24 +356,24 @@ function ConcernQuote({
                 opacity: transitionTextBoxRect ? 1 : 0,
                 y: initialY,
                 backgroundColor: '#ffffff',
-                borderRadius: 8,
+                borderRadius: 12,
               }
         }
         animate={{
           opacity: 1,
           y: 0,
           backgroundColor: '#ffffff',
-          borderRadius: 4,
+          borderRadius: 12,
         }}
         transition={quoteTransition}
       >
-        &ldquo;{concernText}&rdquo;
+        {quoted ? `“${concernText}”` : concernText}
       </motion.div>
     </section>
   )
 }
 
-function DitherLoader() {
+function DitherLoader({ className = 'absolute inset-x-0 bottom-0 block h-[376px] w-full' }: { className?: string }) {
   return (
     <ParticleCloudCanvas
       cloudTime={3800}
@@ -279,104 +395,95 @@ function DitherLoader() {
       count={900}
       size={2.6}
       darkness={0.36}
-      bgColor="#F7F4EE"
+      bgColor="#FCFAF6"
       particleColor="#EFEAE1"
-      className="absolute inset-x-0 bottom-0 block h-[376px] w-full"
+      className={className}
     />
   )
 }
 
-function CareBriefField({
+function getSummaryLabel(label: string) {
+  return label === 'Other' ? 'Details' : label
+}
+
+function CareBriefRowSlot({
   row,
+  isVisible,
   showDivider,
 }: {
   row: CareBriefRow
+  isVisible: boolean
   showDivider: boolean
 }) {
-  return (
-    <motion.div
-      className="overflow-hidden"
-      initial={{ opacity: 0, maxHeight: 0, y: 10 }}
-      animate={{ opacity: 1, maxHeight: 140, y: 0 }}
-      exit={{ opacity: 0, maxHeight: 0, y: -2 }}
-      transition={rowTransition}
-    >
-      <motion.button
-        type="button"
-        className="flex min-h-[47px] w-full items-start justify-between gap-4 text-left"
-        aria-label={`Edit ${row.label}: ${row.value}`}
-      >
-        <span className="flex min-w-0 gap-2.5">
-          <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center text-[#8a8a8a]">
-            <HugeiconsIcon icon={row.icon} size={20} strokeWidth={1.6} />
-          </span>
-          <span className="min-w-0">
-            <span className="block text-[14px] font-medium uppercase leading-[17px] text-[#8a8a8a]">
-              {row.label}
-            </span>
-            <span className="mt-1 block text-[16px] font-medium leading-[20px] text-[#5a5a55]">
-              {row.value}
-            </span>
-          </span>
-        </span>
-        <span className="mt-[23px] flex h-5 w-5 shrink-0 items-center justify-center text-[#8a8a8a]">
-          <HugeiconsIcon icon={Edit03Icon} size={20} strokeWidth={1.6} />
-        </span>
-      </motion.button>
+  const rowHeightClass = showDivider
+    ? row.label === 'Pattern'
+      ? 'min-h-[84px]'
+      : 'min-h-[68px]'
+    : 'min-h-[44px]'
 
-      {showDivider ? <div className="my-3 h-px w-full bg-[#e5e0d6]" /> : null}
-    </motion.div>
+  return (
+    <div className={`relative ${rowHeightClass}`}>
+      <motion.div
+        className="absolute inset-x-0 top-0"
+        animate={{ opacity: isVisible ? 1 : 0 }}
+        transition={rowTransition}
+      >
+        <CareBriefField row={row} isVisible={isVisible} />
+      </motion.div>
+
+      <motion.div
+        className="absolute inset-x-0 top-0"
+        animate={{ opacity: isVisible ? 0 : 1 }}
+        transition={rowTransition}
+        aria-hidden="true"
+      >
+        <CareBriefSkeleton />
+      </motion.div>
+
+      {showDivider ? <div className="absolute inset-x-0 bottom-3 h-px bg-[#e5e0d6]" /> : null}
+    </div>
   )
 }
 
-function CareGuideFooter({
-  canContinue,
-  onContinue,
-}: {
-  canContinue: boolean
-  onContinue: () => void
-}) {
+function CareBriefSkeleton() {
   return (
-    <footer className="absolute inset-x-0 bottom-0 z-10 flex h-[134px] flex-col gap-3 bg-[#f7f4ee]/95 px-4 pb-4 pt-2.5 shadow-[0_-1px_0_rgb(0_0_0_/_8%)] backdrop-blur">
-      <AnimatePresence initial={false}>
-        {canContinue ? (
-          <motion.button
-            key="continue"
-            type="button"
-            onClick={onContinue}
-            className="h-[50px] w-full rounded bg-sage px-4 text-[16px] font-semibold leading-5 text-[#fefaf4] shadow-[0_2px_2px_1px_rgb(0_0_0_/_6%),0_1px_1px_0.5px_rgb(0_0_0_/_8%),0_0_0_1px_rgb(0_0_0_/_12%)] transition-colors hover:bg-sage-deep focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sage"
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 8 }}
-            transition={{ type: 'spring', stiffness: 280, damping: 26, mass: 0.9 }}
-          >
-            Continue
-          </motion.button>
-        ) : (
-          <motion.div
-            key="waiting"
-            className="flex h-[50px] items-center justify-center rounded bg-[#efeae1] text-[14px] font-medium leading-5 text-[#8a8a8a]"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-          >
-            Preparing your next step...
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      <div className="flex min-h-11 items-center justify-between">
-        <div className="flex items-center gap-2 text-ink">
-          <HugeiconsIcon icon={AmbulanceIcon} size={22} strokeWidth={1.7} />
-          <span className="text-[15px] font-medium leading-5">Need urgent help?</span>
+    <div className="flex w-full items-start justify-between gap-4">
+      <div className="flex min-w-0 flex-1 gap-2.5">
+        <div className="size-6 shrink-0 rounded-full bg-[#efeae1]" />
+        <div className="min-w-0 flex-1 pt-0.5">
+          <div className="h-[14px] w-[72px] rounded bg-[#efeae1]" />
+          <div className="mt-2 h-4 w-[78%] rounded bg-[#efeae1]" />
         </div>
-        <button
-          type="button"
-          className="h-9 rounded bg-[#fefaf4] px-3 text-[14px] font-semibold leading-5 text-sage-deep shadow-[0_0_0_1px_rgb(0_0_0_/_10%)] transition-colors hover:bg-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sage"
-        >
-          Get help now
-        </button>
       </div>
-    </footer>
+      <div className="size-6 shrink-0 rounded bg-[#efeae1]" />
+    </div>
+  )
+}
+
+function CareBriefField({ row, isVisible }: { row: CareBriefRow; isVisible: boolean }) {
+  return (
+    <button
+      type="button"
+      className="flex w-full items-start justify-between gap-4 text-left"
+      aria-label={`Edit ${row.label}: ${row.value}`}
+      tabIndex={isVisible ? 0 : -1}
+    >
+      <span className="flex min-w-0 gap-2.5 overflow-hidden rounded">
+        <span className="flex size-6 shrink-0 items-center justify-center text-[#8a8a8a]">
+          <HugeiconsIcon icon={row.icon} size={24} strokeWidth={1.6} />
+        </span>
+        <span className="min-w-0">
+          <span className="block text-[14px] font-medium uppercase leading-[18px] text-[#8a8a8a]">
+            {getSummaryLabel(row.label)}
+          </span>
+          <span className="mt-1 block text-[16px] font-medium leading-[20px] text-[#5a5a55]">
+            {row.value}
+          </span>
+        </span>
+      </span>
+      <span className="flex size-6 shrink-0 items-center justify-center text-[#8a8a8a]">
+        <HugeiconsIcon icon={Edit03Icon} size={24} strokeWidth={1.6} />
+      </span>
+    </button>
   )
 }
